@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Supermarket ERP — Demo</title>
+  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><text y='.9em' font-size='90'>🛒</text></svg>">
+  <style>
+    :root{
+      --bg:#0f172a;
+      --panel:#111827;
+      --muted:#1f2937;
+      --accent:#22c55e;
+      --accent-2:#06b6d4;
+      --text:#e5e7eb;
+      --text-dim:#9ca3af;
+      --danger:#ef4444;
+      --warn:#f59e0b;
+      --ok:#10b981;
+      --radius:14px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background:linear-gradient(180deg, #0b1022, var(--bg));
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+    }
+    a{color:var(--accent)}
+    .app{
+      display:grid;
+      grid-template-columns:260px 1fr;
+      width:100%;
+    }
+    .sidebar{
+      background:linear-gradient(180deg, #0b1224, #0a0f1e);
+      border-right:1px solid rgba(255,255,255,.06);
+      padding:20px 16px;
+      position:sticky;
+      top:0; height:100vh; overflow:auto;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      font-weight:800; letter-spacing:.3px; font-size:18px; margin-bottom:18px;
+    }
+    .brand .logo{width:36px; height:36px; display:grid; place-items:center; background:rgba(255,255,255,.06); border-radius:12px; box-shadow:var(--shadow)}
+    .search{position:relative; margin-bottom:12px}
+    .search input{
+      width:100%; padding:12px 12px 12px 36px; border-radius:12px; border:1px solid rgba(255,255,255,.08); background:#0f172a; color:var(--text);
+    }
+    .search svg{position:absolute; left:10px; top:10px; opacity:.6}
+    .nav{display:flex; flex-direction:column; gap:6px; margin-top:8px}
+    .nav button{
+      width:100%; text-align:left; background:transparent; border:1px solid rgba(255,255,255,.06);
+      padding:10px 12px; border-radius:12px; color:var(--text); cursor:pointer;
+    }
+    .nav button.active{ background:#0b1224; border-color:rgba(255,255,255,.2) }
+    .nav button:hover{ border-color:rgba(255,255,255,.25) }
+    .userBox{
+      margin-top:18px; padding:12px; border:1px dashed rgba(255,255,255,.15); border-radius:12px; font-size:12px; color:var(--text-dim)
+    }
+    .content{
+      padding:20px;
+    }
+    .toolbar{
+      display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px;
+    }
+    .toolbar .title{font-weight:800; font-size:20px; letter-spacing:.3px}
+    .toolbar .actions{display:flex; gap:8px; flex-wrap:wrap}
+    .btn{
+      background:var(--muted); border:1px solid rgba(255,255,255,.12); color:var(--text); padding:10px 12px; border-radius:12px; cursor:pointer;
+    }
+    .btn.primary{ background:linear-gradient(135deg,var(--accent-2), var(--accent)); border:0; color:#051014; font-weight:700 }
+    .btn.danger{ background:linear-gradient(135deg,#ef4444,#f97316); color:white; border:0; }
+    .btn.warn{ background:linear-gradient(135deg,#f59e0b,#f97316); color:white; border:0; }
+    .grid{
+      display:grid; gap:14px;
+    }
+    .kpis{
+      grid-template-columns: repeat(4, minmax(200px, 1fr));
+    }
+    .card{
+      background: linear-gradient(180deg, #0b1224, #0a0f1e);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:var(--radius); padding:16px;
+      box-shadow: var(--shadow);
+    }
+    .card h3{margin:0 0 8px 0; font-size:14px; color:var(--text-dim); font-weight:600}
+    .kpi{font-size:26px; font-weight:900}
+    .muted{color:var(--text-dim); font-size:12px}
+    .tableWrap{overflow:auto; border-radius:12px; border:1px solid rgba(255,255,255,.07)}
+    table{border-collapse:collapse; width:100%; min-width:800px}
+    th, td{ padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.06); text-align:left }
+    th{ font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); background:#0d1428; position:sticky; top:0 }
+    tr:hover td{ background:#0c1222 }
+    input, select, textarea{
+      background:#0f172a; color:var(--text); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px;
+      width:100%;
+    }
+    .row{display:grid; grid-template-columns: repeat(12, 1fr); gap:10px; margin-bottom:10px}
+    .col-6{grid-column: span 6}
+    .col-4{grid-column: span 4}
+    .col-8{grid-column: span 8}
+    .col-12{grid-column: span 12}
+    .pill{font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.18); display:inline-block}
+    .pill.low{ background:rgba(239,68,68,.12); border-color:#ef444444; color:#fecaca }
+    .pill.ok{ background:rgba(16,185,129,.12); border-color:#10b98144; color:#bbf7d0 }
+    .right{ text-align:right }
+    .flex{ display:flex; gap:10px; align-items:center; }
+    .spacer{flex:1}
+    .hidden{ display:none !important }
+    .pos{
+      display:grid; grid-template-columns: 2fr 1.2fr; gap:14px;
+    }
+    .cartItem{ display:flex; align-items:center; justify-content:space-between; border-bottom:1px dashed rgba(255,255,255,.08); padding:8px 0 }
+    .footerNote{margin-top:12px; font-size:12px; color:var(--text-dim)}
+    .login{
+      position:fixed; inset:0; display:grid; place-items:center; background:radial-gradient(1200px 600px at 20% -10%, rgba(34,197,94,.08), transparent), linear-gradient(180deg, #060a18, #0a0f1e);
+      z-index:50;
+    }
+    .login .panel{ width:min(430px, 92vw); }
+    .tag{font-size:11px; padding:2px 6px; border-radius:8px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12)}
+    .footer{ margin-top:20px; padding:10px; text-align:center; color:var(--text-dim); font-size:12px }
+    .notice{ border-left:4px solid var(--accent); padding:10px; background:rgba(34,197,94,.08); border-radius:12px }
+    .dangerNote{ border-left:4px solid var(--danger); background:rgba(239,68,68,.1) }
+    @media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+      .sidebar{ position:relative; height:auto }
+      .pos{ grid-template-columns: 1fr }
+      .kpis{ grid-template-columns: repeat(2, 1fr) }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">🛒</div>
+        <div>
+          Supermarket ERP<br>
+          <span class="muted">Demo localStorage</span>
+        </div>
+      </div>
+      <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.3-4.3M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="1.5"/></svg>
+        <input id="globalSearch" placeholder="Buscar producto / venta / proveedor..." />
+      </div>
+      <div class="nav">
+        <button data-view="dashboard" class="active">📊 Dashboard</button>
+        <button data-view="products">📦 Productos</button>
+        <button data-view="pos">🧾 Punto de Venta (POS)</button>
+        <button data-view="sales">💸 Ventas</button>
+        <button data-view="suppliers">🚚 Proveedores</button>
+        <button data-view="purchases">📥 Compras</button>
+        <button data-view="reports">📈 Reportes</button>
+        <button data-view="backup">💽 Backup & Restore</button>
+        <button data-view="about">ℹ️ Acerca de</button>
+      </div>
+      <div class="userBox">
+        <div><strong>Usuario:</strong> <span id="userNameBox">—</span></div>
+        <div class="muted">Rol: <span id="roleBox">Cajero</span></div>
+        <div class="muted">Tienda: Central</div>
+      </div>
+    </aside>
+    <main class="content">
+      <div class="toolbar">
+        <div class="title" id="viewTitle">Dashboard</div>
+        <div class="actions">
+          <button class="btn" id="btnSeed">Cargar datos demo</button>
+          <button class="btn" id="btnClear">Borrar todo</button>
+          <button class="btn" id="btnSignOut">Cerrar sesión</button>
+        </div>
+      </div>
+
+      <!-- VIEWS -->
+      <section id="view-dashboard">
+        <div class="grid kpis">
+          <div class="card"><h3>Ventas (hoy)</h3><div class="kpi" id="kpiSalesToday">$0</div><div class="muted" id="kpiSalesTodayCount">0 tickets</div></div>
+          <div class="card"><h3>Ingresos (30 días)</h3><div class="kpi" id="kpiSalesMonth">$0</div><div class="muted">Total recaudado</div></div>
+          <div class="card"><h3>Productos</h3><div class="kpi" id="kpiProducts">0</div><div class="muted" id="kpiLowStock">—</div></div>
+          <div class="card"><h3>Proveedores</h3><div class="kpi" id="kpiSuppliers">0</div><div class="muted">Activos</div></div>
+        </div>
+        <div class="grid" style="grid-template-columns:2fr 1fr; margin-top:14px">
+          <div class="card">
+            <h3>Ventas últimos 14 días</h3>
+            <canvas id="chartSales" height="120"></canvas>
+          </div>
+          <div class="card">
+            <h3>Alertas de stock</h3>
+            <div id="alerts"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-products" class="hidden">
+        <div class="card">
+          <div class="row">
+            <div class="col-6"><input id="prodSearch" placeholder="Buscar por nombre / código de barras"></div>
+            <div class="col-6 right"><button class="btn primary" id="btnAddProduct">+ Nuevo producto</button></div>
+          </div>
+          <div class="tableWrap">
+            <table id="tblProducts"><thead><tr>
+              <th>#</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Min</th><th>Proveedor</th><th>Barcode</th><th></th>
+            </tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-pos" class="hidden">
+        <div class="pos">
+          <div class="card">
+            <div class="row">
+              <div class="col-8"><input id="posProductSearch" placeholder="Buscar producto por nombre o código..."></div>
+              <div class="col-4"><input id="posBarcode" placeholder="Escanear / escribir código" /></div>
+            </div>
+            <div class="tableWrap" style="max-height:260px; overflow:auto">
+              <table id="tblPosProducts"><thead><tr><th>Nombre</th><th>Precio</th><th>Stock</th><th>Categoría</th><th></th></tr></thead><tbody></tbody></table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="flex"><strong>Carrito</strong><span class="spacer"></span><button class="btn" id="btnClearCart">Vaciar</button></div>
+            <div id="cart"></div>
+            <div class="footerNote">
+              <div class="row">
+                <div class="col-6"><label>Descuento (%)<br><input id="discount" type="number" min="0" max="100" value="0"></label></div>
+                <div class="col-6"><label>Impuesto (%)<br><input id="tax" type="number" min="0" max="100" value="0"></label></div>
+                <div class="col-12"><label>Método de pago<br><select id="payment"><option>Efectivo</option><option>Tarjeta</option><option>Transferencia</option></select></label></div>
+              </div>
+              <div class="flex" style="margin-top:10px">
+                <div class="spacer"></div>
+                <div><div class="muted">Subtotal</div><div id="subtotal">$0</div></div>
+                <div><div class="muted">Total</div><div class="kpi" id="total">$0</div></div>
+              </div>
+              <div class="row">
+                <div class="col-8"><input id="customer" placeholder="Cliente (opcional)"></div>
+                <div class="col-4"><button class="btn primary" id="btnCheckout">Cobrar</button></div>
+              </div>
+              <div class="muted">Atajos: Enter cobra, Ctrl+K busca, Ctrl+B foco en código, + agrega, - quita.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-sales" class="hidden">
+        <div class="card">
+          <div class="row">
+            <div class="col-6"><input id="salesSearch" placeholder="Buscar por ID / cliente / método" /></div>
+            <div class="col-6 right">
+              <button class="btn" id="btnExportSales">Exportar CSV</button>
+            </div>
+          </div>
+          <div class="tableWrap">
+            <table id="tblSales"><thead><tr>
+              <th>ID</th><th>Fecha</th><th>Cliente</th><th>Método</th><th>Artículos</th><th>Subtotal</th><th>Desc%</th><th>Impuesto%</th><th>Total</th>
+            </tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-suppliers" class="hidden">
+        <div class="card">
+          <div class="row">
+            <div class="col-6"><input id="supSearch" placeholder="Buscar proveedor por nombre/NIT"></div>
+            <div class="col-6 right"><button class="btn primary" id="btnAddSup">+ Nuevo proveedor</button></div>
+          </div>
+          <div class="tableWrap">
+            <table id="tblSuppliers"><thead><tr><th>#</th><th>Nombre</th><th>NIT</th><th>Teléfono</th><th>Contacto</th><th></th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-purchases" class="hidden">
+        <div class="card">
+          <div class="row">
+            <div class="col-6"><select id="poSupplier"></select></div>
+            <div class="col-6 right"><button class="btn" id="btnReceivePO">Recibir compra</button></div>
+          </div>
+          <div class="row">
+            <div class="col-8"><input id="poProductSearch" placeholder="Buscar producto para comprar"></div>
+            <div class="col-4"><input id="poQty" type="number" min="1" placeholder="Cantidad"></div>
+          </div>
+          <div class="tableWrap">
+            <table id="tblPO"><thead><tr><th>Producto</th><th>Cantidad</th><th>Proveedor</th><th></th></tr></thead><tbody></tbody></table>
+          </div>
+          <div class="right"><button class="btn primary" id="btnProcessPO">Procesar y aumentar stock</button></div>
+        </div>
+      </section>
+
+      <section id="view-reports" class="hidden">
+        <div class="grid" style="grid-template-columns:1.6fr 1fr">
+          <div class="card">
+            <h3>Ventas por categoría (últimos 30 días)</h3>
+            <canvas id="chartByCategory" height="140"></canvas>
+          </div>
+          <div class="card">
+            <h3>Top productos vendidos</h3>
+            <ol id="topProducts"></ol>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-backup" class="hidden">
+        <div class="card">
+          <div class="notice">
+            Exporta un respaldo o restaura tus datos. Todo se guarda en <strong>localStorage</strong> del navegador, sin servidor.
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <button class="btn" id="btnExportJson">Exportar JSON</button>
+            </div>
+            <div class="col-6 right">
+              <input type="file" id="importFile" accept="application/json">
+              <button class="btn warn" id="btnImportJson">Importar JSON</button>
+            </div>
+          </div>
+          <div class="dangerNote card" style="margin-top:12px">
+            <strong>Precaución:</strong> <em>Borrar todo</em> elimina productos, ventas, proveedores y compras.
+          </div>
+        </div>
+      </section>
+
+      <section id="view-about" class="hidden">
+        <div class="card">
+          <h3>Acerca de esta demo</h3>
+          <p>Este es un demo 100% en HTML/JS/CSS que simula un ERP de supermercado: productos, POS, ventas, proveedores, compras, reportes y backups. No requiere servidor.</p>
+          <ul>
+            <li>Datos persistidos en <span class="tag">localStorage</span>.</li>
+            <li>Incluye <span class="tag">atajos</span> de teclado para ventas.</li>
+            <li>Exportación <span class="tag">CSV/JSON</span>.</li>
+          </ul>
+          <p>Ideal para pruebas, prototipos y demos offline.</p>
+        </div>
+      </section>
+
+      <!-- LOGIN -->
+      <div class="login" id="login">
+        <div class="card panel">
+          <div class="brand"><div class="logo">🛒</div><div><strong>Supermarket ERP</strong><div class="muted">Acceso de demostración</div></div></div>
+          <div class="row">
+            <div class="col-12"><input id="loginUser" placeholder="Usuario (ej: admin)"></div>
+            <div class="col-12"><input id="loginPass" type="password" placeholder="Contraseña (ej: 1234)"></div>
+            <div class="col-12">
+              <button class="btn primary" id="btnLogin">Ingresar</button>
+              <span class="muted">Credenciales de demo: <code>admin</code> / <code>1234</code></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">Hecho con ❤️ para demostración — Sin servidor — <span class="muted">v1.0</span></div>
+    </main>
+  </div>
+
+  <!-- External libs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <script>
+    // --------------- UTIL ---------------
+    const $$ = sel => document.querySelector(sel);
+    const $$$ = sel => Array.from(document.querySelectorAll(sel));
+    const fmt = n => new Intl.NumberFormat('es-CO', {style:'currency', currency:'COP', maximumFractionDigits:0}).format(n||0);
+    const todayIso = () => new Date().toISOString().slice(0,10);
+    const uid = (p='id') => p + Math.random().toString(36).slice(2,8);
+    const read = (k, d) => JSON.parse(localStorage.getItem(k) || JSON.stringify(d));
+    const write = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+    const sum = arr => arr.reduce((a,b)=>a+(+b||0),0);
+
+    // --------------- STATE ---------------
+    const DB = {
+      products: 'erp.products',
+      sales: 'erp.sales',
+      suppliers: 'erp.suppliers',
+      purchases: 'erp.purchases',
+      users: 'erp.users'
+    };
+
+    function seedData() {
+      if (read(DB.products, []).length) { alert('Ya hay datos cargados.'); return; }
+      const suppliers = [
+        {id: uid('sup_'), name:'Abastos del Valle', nit:'901234567', phone:'3110001122', contact:'Laura'},
+        {id: uid('sup_'), name:'Distribuciones La 14', nit:'800456789', phone:'3205556677', contact:'Mario'},
+      ];
+      const products = [
+        {id: uid('prd_'), name:'Arroz 1kg', category:'Granos', price:4200, stock:80, min:20, supplierId:suppliers[0].id, barcode:'770000000001'},
+        {id: uid('prd_'), name:'Azúcar 1kg', category:'Granos', price:3800, stock:50, min:15, supplierId:suppliers[0].id, barcode:'770000000002'},
+        {id: uid('prd_'), name:'Leche 1L', category:'Lácteos', price:3800, stock:60, min:20, supplierId:suppliers[1].id, barcode:'770000000010'},
+        {id: uid('prd_'), name:'Huevos docena', category:'Huevos', price:12000, stock:40, min:10, supplierId:suppliers[1].id, barcode:'770000000020'},
+        {id: uid('prd_'), name:'Aceite 1L', category:'Aceites', price:14500, stock:30, min:8, supplierId:suppliers[1].id, barcode:'770000000030'},
+        {id: uid('prd_'), name:'Pan tajado', category:'Panadería', price:6200, stock:25, min:8, supplierId:suppliers[0].id, barcode:'770000000040'},
+        {id: uid('prd_'), name:'Atún en lata', category:'Enlatados', price:8200, stock:35, min:12, supplierId:suppliers[1].id, barcode:'770000000050'},
+      ];
+      const sales = [];
+      const purchases = [];
+      const users = [{username:'admin', password:'1234', name:'Administrador', role:'Admin'}];
+      write(DB.suppliers, suppliers);
+      write(DB.products, products);
+      write(DB.sales, sales);
+      write(DB.purchases, purchases);
+      write(DB.users, users);
+      alert('Datos demo cargados ✅');
+      renderAll();
+    }
+
+    function clearAll() {
+      if (!confirm('¿Eliminar TODOS los datos?')) return;
+      [DB.products, DB.sales, DB.suppliers, DB.purchases, DB.users].forEach(k => localStorage.removeItem(k));
+      renderAll();
+    }
+
+    // --------------- NAV/VIEW ---------------
+    const views = ['dashboard','products','pos','sales','suppliers','purchases','reports','backup','about'];
+    function show(view){
+      $$$('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+      views.forEach(v => $$('#view-'+v).classList.toggle('hidden', v!==view));
+      $$('#viewTitle').textContent = {
+        dashboard:'Dashboard',
+        products:'Productos',
+        pos:'Punto de Venta (POS)',
+        sales:'Ventas',
+        suppliers:'Proveedores',
+        purchases:'Compras',
+        reports:'Reportes',
+        backup:'Backup & Restore',
+        about:'Acerca de'
+      }[view] || view;
+      if(view==='reports'){ drawReports(); }
+      if(view==='dashboard'){ drawDashboard(); }
+      if(view==='products'){ drawProducts(); }
+      if(view==='pos'){ drawPosProducts(); drawCart(); }
+      if(view==='sales'){ drawSales(); }
+      if(view==='suppliers'){ drawSuppliers(); }
+      if(view==='purchases'){ drawPO(); }
+    }
+    $$$('.nav button').forEach(b => b.addEventListener('click', ()=>show(b.dataset.view)));
+
+    // --------------- LOGIN ---------------
+    const sessionKey = 'erp.session';
+    function signIn(u,p){
+      const users = read(DB.users, [{username:'admin',password:'1234',name:'Admin',role:'Admin'}]);
+      const user = users.find(x=>x.username===u && x.password===p);
+      if(!user){ alert('Credenciales inválidas'); return; }
+      write(sessionKey, {username:user.username, name:user.name, role:user.role});
+      $$('#login').style.display='none';
+      $$('#userNameBox').textContent = user.name;
+      $$('#roleBox').textContent = user.role;
+      renderAll();
+    }
+    function signOut(){
+      localStorage.removeItem(sessionKey);
+      $$('#login').style.display='grid';
+    }
+    $$('#btnLogin').onclick = ()=>signIn($$('#loginUser').value.trim(), $$('#loginPass').value.trim());
+    $$('#btnSignOut').onclick = signOut;
+    window.addEventListener('load', ()=>{
+      const s = read(sessionKey,null);
+      if(s){ $$('#login').style.display='none'; $$('#userNameBox').textContent=s.name; $$('#roleBox').textContent=s.role; }
+      renderAll();
+    });
+
+    // --------------- PRODUCTS ---------------
+    function products(){ return read(DB.products, []); }
+    function saveProducts(list){ write(DB.products, list); }
+    function upsertProduct(p){
+      const list = products();
+      const i = list.findIndex(x=>x.id===p.id);
+      if(i>=0) list[i] = p; else list.push(p);
+      saveProducts(list); drawProducts(); drawPosProducts(); drawDashboard();
+    }
+    function deleteProduct(id){
+      if(!confirm('¿Eliminar producto?')) return;
+      saveProducts(products().filter(p=>p.id!==id)); drawProducts(); drawPosProducts(); drawDashboard();
+    }
+    function drawProducts(){
+      const q = $$('#prodSearch').value?.toLowerCase() || '';
+      const supMap = Object.fromEntries(suppliers().map(s=>[s.id, s.name]));
+      const rows = products().filter(p=> (p.name.toLowerCase().includes(q) || (p.barcode||'').includes(q))).map((p,i)=>{
+        const pill = p.stock<=p.min ? '<span class="pill low">Bajo</span>' : '<span class="pill ok">OK</span>';
+        return `<tr>
+          <td>${i+1}</td>
+          <td>${p.name} ${pill}</td>
+          <td>${p.category||''}</td>
+          <td>${fmt(p.price)}</td>
+          <td>${p.stock}</td>
+          <td>${p.min||0}</td>
+          <td>${supMap[p.supplierId]||'-'}</td>
+          <td>${p.barcode||''}</td>
+          <td class="right">
+            <button class="btn" onclick='editProduct("${p.id}")'>Editar</button>
+            <button class="btn danger" onclick='deleteProduct("${p.id}")'>Eliminar</button>
+          </td>
+        </tr>`
+      }).join('');
+      $$('#tblProducts tbody').innerHTML = rows || '<tr><td colspan="9">Sin resultados.</td></tr>';
+    }
+    $$('#prodSearch').oninput = drawProducts;
+    $$('#btnAddProduct').onclick = ()=>{
+      const p = {id:uid('prd_'), name:'', category:'', price:0, stock:0, min:0, supplierId:'', barcode:''};
+      editProduct(p.id, p);
+    }
+    window.editProduct = (id, preset=null)=>{
+      const p = preset || products().find(x=>x.id===id);
+      const supOpts = suppliers().map(s=>`<option value="${s.id}" ${s.id===p.supplierId?'selected':''}>${s.name}</option>`).join('');
+      const html = `<div class="row">
+        <div class="col-8"><input id="fName" placeholder="Nombre" value="${p.name||''}"></div>
+        <div class="col-4"><input id="fBarcode" placeholder="Código de barras" value="${p.barcode||''}"></div>
+        <div class="col-4"><input id="fCategory" placeholder="Categoría" value="${p.category||''}"></div>
+        <div class="col-4"><input id="fPrice" type="number" placeholder="Precio" value="${p.price||0}"></div>
+        <div class="col-4"><input id="fMin" type="number" placeholder="Stock mínimo" value="${p.min||0}"></div>
+        <div class="col-4"><input id="fStock" type="number" placeholder="Stock actual" value="${p.stock||0}"></div>
+        <div class="col-8"><select id="fSupplier">${supOpts}</select></div>
+        <div class="col-12 right"><button class="btn primary" id="fSave">Guardar</button></div>
+      </div>`;
+      modal('Producto', html, ()=>{
+        const data = {
+          id: p.id,
+          name: $$('#fName').value.trim(),
+          barcode: $$('#fBarcode').value.trim(),
+          category: $$('#fCategory').value.trim(),
+          price: +$$('#fPrice').value || 0,
+          min: +$$('#fMin').value || 0,
+          stock: +$$('#fStock').value || 0,
+          supplierId: $$('#fSupplier').value || ''
+        };
+        if(!data.name) return alert('Nombre requerido');
+        upsertProduct(data); closeModal();
+      });
+    };
+
+    // --------------- POS / CART ---------------
+    let cart = [];
+    function addToCart(pid){
+      const p = products().find(x=>x.id===pid); if(!p) return;
+      if(p.stock<=0){ alert('Sin stock'); return; }
+      const i = cart.findIndex(x=>x.pid===pid);
+      if(i>=0) cart[i].qty++; else cart.push({pid, qty:1, price:p.price});
+      drawCart();
+    }
+    function removeFromCart(pid){
+      const i = cart.findIndex(x=>x.pid===pid); if(i<0) return;
+      cart[i].qty--; if(cart[i].qty<=0) cart = cart.filter(x=>x.pid!==pid);
+      drawCart();
+    }
+    function clearCart(){ cart = []; drawCart(); }
+    $$('#btnClearCart').onclick = clearCart;
+    function drawPosProducts(){
+      const q = $$('#posProductSearch').value?.toLowerCase() || '';
+      const rows = products().filter(p=> p.name.toLowerCase().includes(q) || (p.barcode||'').includes(q)).map(p=>`
+        <tr>
+          <td>${p.name}</td>
+          <td>${fmt(p.price)}</td>
+          <td>${p.stock}</td>
+          <td>${p.category||''}</td>
+          <td class="right"><button class="btn" onclick='addToCart("${p.id}")'>Agregar</button></td>
+        </tr>
+      `).join('');
+      $$('#tblPosProducts tbody').innerHTML = rows || '<tr><td colspan="5">Sin resultados.</td></tr>';
+    }
+    $$('#posProductSearch').oninput = drawPosProducts;
+    $$('#posBarcode').addEventListener('keydown', e=>{
+      if(e.key==='Enter'){
+        const code = e.target.value.trim(); if(!code) return;
+        const p = products().find(x=>x.barcode===code);
+        if(p){ addToCart(p.id); e.target.value=''; } else alert('Código no encontrado');
+      }
+    });
+    function drawCart(){
+      const list = cart.map(ci=>{
+        const p = products().find(x=>x.id===ci.pid);
+        return `<div class="cartItem">
+          <div>${p.name} <span class="muted">x${ci.qty}</span></div>
+          <div class="flex">
+            <button class="btn" onclick='removeFromCart("${ci.pid}")'>-</button>
+            <button class="btn" onclick='addToCart("${ci.pid}")'>+</button>
+            <div>${fmt(ci.qty*ci.price)}</div>
+          </div>
+        </div>`
+      }).join('');
+      $$('#cart').innerHTML = list || '<div class="muted">Carrito vacío.</div>';
+      const subtotal = cart.reduce((a,c)=> a + c.qty*c.price, 0);
+      const disc = (+$$('#discount').value||0)/100;
+      const tax = (+$$('#tax').value||0)/100;
+      const total = Math.round(subtotal*(1-disc)*(1+tax));
+      $$('#subtotal').textContent = fmt(subtotal);
+      $$('#total').textContent = fmt(total);
+    }
+    $$$('#discount,#tax'.split(',').map(id=>id.trim())).forEach(()=>{}); // placeholder
+    $$('#discount').oninput = drawCart; $$('#tax').oninput = drawCart;
+    document.addEventListener('keydown', e=>{
+      if(e.key==='Enter' && document.activeElement.tagName!=='INPUT'){ e.preventDefault(); $$('#btnCheckout').click(); }
+      if(e.ctrlKey && e.key.toLowerCase()==='k'){ e.preventDefault(); $$('#posProductSearch').focus(); }
+      if(e.ctrlKey && e.key.toLowerCase()==='b'){ e.preventDefault(); $$('#posBarcode').focus(); }
+    });
+    $$('#btnCheckout').onclick = ()=>{
+      if(!cart.length){ alert('Carrito vacío'); return; }
+      const prods = products();
+      for(const ci of cart){
+        const p = prods.find(x=>x.id===ci.pid);
+        if(!p || p.stock<ci.qty) return alert('Stock insuficiente para '+(p?.name||ci.pid));
+      }
+      // reduce stock
+      for(const ci of cart){ const p = prods.find(x=>x.id===ci.pid); p.stock -= ci.qty; }
+      saveProducts(prods);
+      // record sale
+      const subtotal = cart.reduce((a,c)=> a + c.qty*c.price, 0);
+      const discount = (+$$('#discount').value||0);
+      const tax = (+$$('#tax').value||0);
+      const total = Math.round(subtotal*(1-discount/100)*(1+tax/100));
+      const sale = {
+        id: uid('sl_'),
+        date: new Date().toISOString(),
+        items: cart.map(c=>({pid:c.pid, qty:c.qty, price:c.price})),
+        payment: $$('#payment').value,
+        customer: $$('#customer').value.trim() || null,
+        subtotal, discount, tax, total
+      };
+      const all = read(DB.sales, []); all.push(sale); write(DB.sales, all);
+      cart = []; drawCart(); drawSales(); drawDashboard(); drawPosProducts();
+      alert('Venta registrada: '+sale.id);
+    };
+
+    // --------------- SALES ---------------
+    function sales(){ return read(DB.sales, []); }
+    function drawSales(){
+      const q = $$('#salesSearch').value?.toLowerCase() || '';
+      const rows = sales()
+        .filter(s=> s.id.toLowerCase().includes(q) || (s.customer||'').toLowerCase().includes(q) || (s.payment||'').toLowerCase().includes(q))
+        .toReversed?.() || sales().slice().reverse();
+      $$('#tblSales tbody').innerHTML = rows.map(s=>{
+        return `<tr>
+          <td>${s.id}</td>
+          <td>${new Date(s.date).toLocaleString()}</td>
+          <td>${s.customer||'-'}</td>
+          <td>${s.payment}</td>
+          <td>${s.items.length}</td>
+          <td>${fmt(s.subtotal)}</td>
+          <td>${s.discount||0}%</td>
+          <td>${s.tax||0}%</td>
+          <td>${fmt(s.total)}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="9">Sin ventas.</td></tr>';
+    }
+    $$('#salesSearch').oninput = drawSales;
+
+    // --------------- SUPPLIERS ---------------
+    function suppliers(){ return read(DB.suppliers, []); }
+    function saveSuppliers(list){ write(DB.suppliers, list); }
+    function upsertSupplier(s){
+      const list = suppliers();
+      const i = list.findIndex(x=>x.id===s.id);
+      if(i>=0) list[i]=s; else list.push(s);
+      saveSuppliers(list); drawSuppliers();
+    }
+    function deleteSupplier(id){
+      if(!confirm('¿Eliminar proveedor?')) return;
+      saveSuppliers(suppliers().filter(s=>s.id!==id)); drawSuppliers();
+    }
+    function drawSuppliers(){
+      const q = $$('#supSearch').value?.toLowerCase() || '';
+      const rows = suppliers().filter(s=> s.name.toLowerCase().includes(q) || (s.nit||'').includes(q)).map((s,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td>${s.name}</td>
+          <td>${s.nit||''}</td>
+          <td>${s.phone||''}</td>
+          <td>${s.contact||''}</td>
+          <td class="right">
+            <button class="btn" onclick='editSup("${s.id}")'>Editar</button>
+            <button class="btn danger" onclick='deleteSupplier("${s.id}")'>Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
+      $$('#tblSuppliers tbody').innerHTML = rows || '<tr><td colspan="6">Sin proveedores.</td></tr>';
+      // Fill supplier select in PO
+      $$('#poSupplier').innerHTML = suppliers().map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+    }
+    $$('#btnAddSup').onclick = ()=>{
+      const s = {id: uid('sup_'), name:'', nit:'', phone:'', contact:''};
+      editSup(s.id, s);
+    }
+    window.editSup = (id, preset=null)=>{
+      const s = preset || suppliers().find(x=>x.id===id);
+      const html = `<div class="row">
+        <div class="col-12"><input id="sName" placeholder="Nombre" value="${s.name||''}"></div>
+        <div class="col-6"><input id="sNIT" placeholder="NIT" value="${s.nit||''}"></div>
+        <div class="col-6"><input id="sPhone" placeholder="Teléfono" value="${s.phone||''}"></div>
+        <div class="col-12"><input id="sContact" placeholder="Contacto" value="${s.contact||''}"></div>
+        <div class="col-12 right"><button class="btn primary" id="sSave">Guardar</button></div>
+      </div>`;
+      modal('Proveedor', html, ()=>{
+        const data = {
+          id: s.id,
+          name: $$('#sName').value.trim(),
+          nit: $$('#sNIT').value.trim(),
+          phone: $$('#sPhone').value.trim(),
+          contact: $$('#sContact').value.trim()
+        };
+        if(!data.name) return alert('Nombre requerido');
+        upsertSupplier(data); closeModal();
+      });
+    };
+
+    // --------------- PURCHASES (PO) ---------------
+    let poItems = [];
+    function drawPO(){
+      $$('#tblPO tbody').innerHTML = poItems.map((it,i)=>{
+        const p = products().find(x=>x.id===it.pid);
+        const s = suppliers().find(x=>x.id===it.sid);
+        return `<tr>
+          <td>${p?.name||it.pid}</td>
+          <td>${it.qty}</td>
+          <td>${s?.name||it.sid}</td>
+          <td class="right"><button class="btn danger" onclick="removePO(${i})">Quitar</button></td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="4">Sin ítems.</td></tr>';
+    }
+    function removePO(i){ poItems.splice(i,1); drawPO(); }
+    $$('#poProductSearch').addEventListener('keydown', e=>{
+      if(e.key==='Enter'){
+        const q = e.target.value.toLowerCase().trim();
+        const p = products().find(x=> x.name.toLowerCase().includes(q) || (x.barcode||'')===q);
+        if(!p) return alert('Producto no encontrado');
+        const sid = $$('#poSupplier').value || '';
+        const qty = +$$('#poQty').value || 1;
+        poItems.push({pid:p.id, sid, qty});
+        e.target.value=''; $$('#poQty').value=''; drawPO();
+      }
+    });
+    $$('#btnReceivePO').onclick = ()=>{
+      if(!poItems.length) return alert('Nada que recibir');
+      // only show, processing is below
+      alert('Cuando presiones "Procesar", el stock aumentará.');
+    }
+    $$('#btnProcessPO').onclick = ()=>{
+      if(!poItems.length) return alert('Sin ítems');
+      const prods = products();
+      for(const it of poItems){
+        const p = prods.find(x=>x.id===it.pid);
+        if(p) p.stock += it.qty;
+      }
+      saveProducts(prods);
+      const rec = { id: uid('po_'), date:new Date().toISOString(), items: poItems.slice(), supplierId: $$('#poSupplier').value };
+      const all = read(DB.purchases, []); all.push(rec); write(DB.purchases, all);
+      poItems = []; drawPO(); drawProducts(); drawDashboard(); drawPosProducts();
+      alert('Compra recibida y stock actualizado');
+    };
+
+    // --------------- DASHBOARD ---------------
+    let chartSales;
+    function drawDashboard(){
+      const list = sales();
+      const today = todayIso();
+      const todaySales = list.filter(s=>s.date.slice(0,10)===today);
+      $$('#kpiSalesToday').textContent = fmt(sum(todaySales.map(s=>s.total)));
+      $$('#kpiSalesTodayCount').textContent = todaySales.length+' tickets';
+      $$('#kpiProducts').textContent = products().length;
+      const lows = products().filter(p=>p.stock<=p.min).length;
+      $$('#kpiLowStock').textContent = lows? (lows+' con stock bajo'):'Sin alertas';
+      $$('#kpiSuppliers').textContent = suppliers().length;
+
+      // last 14 days
+      const days = [...Array(14)].map((_,i)=>{
+        const d = new Date(Date.now()- (13-i)*86400000);
+        const key = d.toISOString().slice(0,10);
+        const total = sum(list.filter(s=>s.date.slice(0,10)===key).map(s=>s.total));
+        return { label: d.toLocaleDateString('es-CO',{day:'2-digit', month:'2-digit'}), total };
+      });
+      const ctx = $$('#chartSales').getContext('2d');
+      if(chartSales) chartSales.destroy();
+      chartSales = new Chart(ctx, {
+        type:'line',
+        data:{ labels: days.map(d=>d.label), datasets:[{label:'Ventas', data: days.map(d=>d.total), fill:true, tension:.35 }]},
+        options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ ticks:{ callback:v=>fmt(v) }} } }
+      });
+
+      // Alerts
+      const alerts = products().filter(p=>p.stock<=p.min).map(p=> `<div class="pill low">${p.name} · ${p.stock} (min ${p.min})</div>`).join(' ');
+      $$('#alerts').innerHTML = alerts || '<span class="pill ok">Sin alertas</span>';
+    }
+
+    // --------------- REPORTS ---------------
+    let chartCat;
+    function drawReports(){
+      const list = sales().filter(s=> Date.now()-new Date(s.date).getTime() < 30*86400000);
+      const catTotals = {};
+      const countByProduct = {};
+      const prods = products();
+      for(const s of list){
+        for(const it of s.items){
+          const p = prods.find(x=>x.id===it.pid); if(!p) continue;
+          catTotals[p.category] = (catTotals[p.category]||0) + it.qty*it.price;
+          countByProduct[p.name] = (countByProduct[p.name]||0) + it.qty;
+        }
+      }
+      const top = Object.entries(countByProduct).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      $$('#topProducts').innerHTML = top.map(([name,qty])=> `<li>${name} — <span class="tag">${qty} uds</span></li>`).join('') || '<li>No hay datos.</li>';
+      const ctx = $$('#chartByCategory').getContext('2d');
+      if(chartCat) chartCat.destroy();
+      chartCat = new Chart(ctx, {
+        type:'bar',
+        data:{ labels:Object.keys(catTotals), datasets:[{label:'Ventas por categoría', data:Object.values(catTotals)}] },
+        options:{ plugins:{legend:{display:false}}, scales:{ y:{ ticks:{ callback:v=>fmt(v)} } } }
+      });
+    }
+
+    // --------------- BACKUP/RESTORE ---------------
+    $$('#btnExportJson').onclick = ()=>{
+      const data = {};
+      [DB.products,DB.sales,DB.suppliers,DB.purchases,DB.users,sessionKey].forEach(k=> data[k]=localStorage.getItem(k));
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'supermarket_erp_backup.json';
+      a.click();
+    };
+    $$('#btnImportJson').onclick = ()=>{
+      const f = $$('#importFile').files[0]; if(!f) return alert('Selecciona un archivo JSON');
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        const data = JSON.parse(reader.result);
+        Object.entries(data).forEach(([k,v])=> { if(v) localStorage.setItem(k, v); else localStorage.removeItem(k); });
+        alert('Datos importados.'); renderAll();
+      };
+      reader.readAsText(f);
+    };
+    $$('#btnExportSales').onclick = ()=>{
+      const rows = [['ID','Fecha','Cliente','Método','Items','Subtotal','Desc%','Impuesto%','Total']];
+      for(const s of sales()){
+        rows.push([s.id, s.date, s.customer||'', s.payment, s.items.length, s.subtotal, s.discount||0, s.tax||0, s.total]);
+      }
+      const csv = rows.map(r=> r.map(c=> `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download='ventas.csv'; a.click();
+    };
+
+    // --------------- SEARCH (GLOBAL) ---------------
+    $$('#globalSearch').addEventListener('keydown', e=>{
+      if(e.key==='Enter'){
+        const q = e.target.value.toLowerCase().trim();
+        if(!q) return;
+        // Try products first
+        const p = products().find(x=> x.name.toLowerCase().includes(q) || (x.barcode||'')===q);
+        if(p){ show('products'); $$('#prodSearch').value = p.name; drawProducts(); return; }
+        // Try sales
+        const s = sales().find(x=> x.id.toLowerCase().includes(q) || (x.customer||'').toLowerCase().includes(q));
+        if(s){ show('sales'); $$('#salesSearch').value = s.id; drawSales(); return; }
+        // Try suppliers
+        const sup = suppliers().find(x=> x.name.toLowerCase().includes(q) || (x.nit||'').includes(q));
+        if(sup){ show('suppliers'); $$('#supSearch').value = sup.name; drawSuppliers(); return; }
+        alert('Sin coincidencias.');
+      }
+    });
+
+    // --------------- MODAL ---------------
+    let modalOnConfirm = null;
+    function modal(title, bodyHtml, onConfirm){
+      const wrap = document.createElement('div');
+      wrap.id = 'modalWrap';
+      wrap.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.5); display:grid; place-items:center; z-index:60';
+      wrap.innerHTML = `<div class="card" style="width:min(700px,92vw)">
+        <div class="flex"><strong>${title}</strong><span class="spacer"></span><button class="btn" onclick="closeModal()">✕</button></div>
+        <div style="margin-top:10px">${bodyHtml}</div>
+      </div>`;
+      document.body.appendChild(wrap);
+      modalOnConfirm = onConfirm;
+      setTimeout(()=>{
+        const btn = document.getElementById('fSave') || document.getElementById('sSave');
+        if(btn) btn.onclick = onConfirm;
+      });
+    }
+    function closeModal(){ const m = document.getElementById('modalWrap'); if(m) m.remove(); modalOnConfirm=null; }
+
+    // --------------- TOP LEVEL ACTIONS ---------------
+    $$('#btnSeed').onclick = seedData;
+    $$('#btnClear').onclick = clearAll;
+
+    function renderAll(){
+      drawDashboard(); drawProducts(); drawPosProducts(); drawSales(); drawSuppliers(); drawPO(); drawReports();
+    }
+  </script>
+</body>
+</html>
