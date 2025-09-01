@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperERP - Sistema Integral de Gestión para Supermercados</title>
+    <style>
+        :root {
+            --primary: #2E7D32;
+            --secondary: #FF8F00;
+            --accent: #1565C0;
+            --finance: #7B1FA2;
+            --hr: #D32F2F;
+            --accounting: #0277BD;
+            --light: #F5F5F5;
+            --dark: #263238;
+            --sidebar-width: 250px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-brand i {
+            margin-right: 10px;
+            font-size: 1.8rem;
+        }
+        
+        .navbar-menu {
+            display: flex;
+        }
+        
+        .navbar-item {
+            padding: 0.5rem 1rem;
+            margin: 0 0.2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .navbar-item.active {
+            background-color: var(--secondary);
+        }
+        
+        .navbar-item i {
+            margin-right: 5px;
+        }
+        
+        .container {
+            display: flex;
+            flex: 1;
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--dark);
+            color: white;
+            padding: 1rem 0;
+            overflow-y: auto;
+            height: calc(100vh - 60px);
+            position: sticky;
+            top: 60px;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-section {
+            padding: 0.5rem 1.5rem;
+            font-weight: bold;
+            color: #BBB;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+        }
+        
+        .sidebar-section:first-child {
+            margin-top: 0;
+        }
+        
+        .sidebar-item {
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-item.active {
+            background-color: var(--primary);
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .module-title {
+            font-size: 1.8rem;
+            color: var(--dark);
+        }
+        
+        .module-subtitle {
+            color: #666;
+            margin-top: 0.3rem;
+        }
+        
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            padding: 1rem;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header.primary {
+            background-color: var(--primary);
+        }
+        
+        .card-header.finance {
+            background-color: var(--finance);
+        }
+        
+        .card-header.hr {
+            background-color: var(--hr);
+        }
+        
+        .card-header.accounting {
+            background-color: var(--accounting);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .stat-primary {
+            color: var(--primary);
+        }
+        
+        .stat-finance {
+            color: var(--finance);
+        }
+        
+        .stat-hr {
+            color: var(--hr);
+        }
+        
+        .stat-accounting {
+            color: var(--accounting);
+        }
+        
+        .stat-description {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .alert-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            background-color: #FF5252;
+            color: white;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .badge {
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        .badge-warning {
+            background-color: #FFF8E1;
+            color: #FF8F00;
+        }
+        
+        .badge-danger {
+            background-color: #FFEBEE;
+            color: #D32F2F;
+        }
+        
+        .badge-success {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+        }
+        
+        .badge-info {
+            background-color: #E3F2FD;
+            color: #1565C0;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .btn i {
+            margin-right: 5px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1B5E20;
+        }
+        
+        .btn-finance {
+            background-color: var(--finance);
+            color: white;
+        }
+        
+        .btn-finance:hover {
+            background-color: #6A1B9A;
+        }
+        
+        .btn-hr {
+            background-color: var(--hr);
+            color: white;
+        }
+        
+        .btn-hr:hover {
+            background-color: #C2185B;
+        }
+        
+        .btn-accounting {
+            background-color: var(--accounting);
+            color: white;
+        }
+        
+        .btn-accounting:hover {
+            background-color: #01579B;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: border-color 0.3s;
+        }
+        
+        .tab.active {
+            border-color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+        
+        .chart-placeholder {
+            height: 300px;
+            background: linear-gradient(45deg, #f5f5f5 25%, transparent 25%, transparent 75%, #f5f5f5 75%, #f5f5f5),
+                        linear-gradient(45deg, #f5f5f5 25%, transparent 25%, transparent 75%, #f5f5f5 75%, #f5f5f5);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-style: italic;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .notification-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #FF5252;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 5px;
+        }
+        
+        @media (max-width: 1200px) {
+            .grid-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar-section, .sidebar-item span {
+                display: none;
+            }
+            
+            .sidebar-item {
+                justify-content: center;
+                padding: 1rem;
+            }
+            
+            .sidebar-item i {
+                margin-right: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-menu {
+                display: none;
+            }
+            
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Barra de navegación superior -->
+    <div class="navbar">
+        <div class="navbar-brand">
+            <i class="fas fa-store"></i>
+            <span>SuperERP - Mi Supermercado</span>
+        </div>
+        <div class="navbar-menu">
+            <div class="navbar-item active"><i class="fas fa-home"></i> Inicio</div>
+            <div class="navbar-item"><i class="fas fa-cash-register"></i> Ventas</div>
+            <div class="navbar-item"><i class="fas fa-boxes"></i> Inventario</div>
+            <div class="navbar-item"><i class="fas fa-chart-line"></i> Finanzas</div>
+            <div class="navbar-item"><i class="fas fa-users"></i> RH</div>
+            <div class="navbar-item"><i class="fas fa-calculator"></i> Contabilidad</div>
+            <div class="navbar-item"><i class="fas fa-user-circle"></i> Admin</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Menú lateral -->
+        <div class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-section">PRINCIPAL</li>
+                <li class="sidebar-item active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                
+                <li class="sidebar-section">OPERACIONES</li>
+                <li class="sidebar-item">
+                    <i class="fas fa-cash-register"></i>
+                    <span>Punto de Venta</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-box"></i>
+                    <span>Productos</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-warehouse"></i>
+                    <span>Inventario</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Compras</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Proveedores</span>
+                </li>
+                
+                <li class="sidebar-section">FINANZAS</li>
+                <li class="sidebar-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Flujo de Caja</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Presupuestos</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-coins"></i>
+                    <span>Gastos</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Ingresos</span>
+                </li>
+                
+                <li class="sidebar-section">RECURSOS HUMANOS</li>
+                <li class="sidebar-item">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Empleados</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Asistencia</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Nóminas</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Turnos</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-tasks"></i>
+                    <span>Evaluaciones</span>
+                </li>
+                
+                <li class="sidebar-section">CONTABILIDAD</li>
+                <li class="sidebar-item">
+                    <i class="fas fa-balance-scale"></i>
+                    <span>Balance General</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Facturación</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-receipt"></i>
+                    <span>Impuestos</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-book"></i>
+                    <span>Libros Contables</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Conciliación</span>
+                </li>
+                
+                <li class="sidebar-section">REPORTES</li>
+                <li class="sidebar-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reportes Ventas</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Reportes Financieros</span>
+                </li>
+                <li class="sidebar-item">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Reportes RH</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="main-content">
+            <!-- Encabezado del módulo -->
+            <div class="module-header">
+                <div>
+                    <h1 class="module-title">Dashboard Principal</h1>
+                    <p class="module-subtitle">Resumen integral de todas las áreas del supermercado</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary"><i class="fas fa-download"></i> Generar Reporte</button>
+                </div>
+            </div>
+            
+            <!-- Pestañas de módulos -->
+            <div class="tabs">
+                <div class="tab active" data-tab="dashboard">Dashboard</div>
+                <div class="tab" data-tab="finanzas">Finanzas</div>
+                <div class="tab" data-tab="rh">Recursos Humanos</div>
+                <div class="tab" data-tab="contabilidad">Contabilidad</div>
+            </div>
+            
+            <!-- Contenido del Dashboard -->
+            <div class="tab-content active" id="dashboard-tab">
+                <!-- Tarjetas de resumen -->
+                <div class="dashboard-cards">
+                    <div class="card">
+                        <div class="card-header primary">
+                            <span>Ventas Hoy</span>
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-primary">$4,582.50</div>
+                            <div class="stat-description">+12% respecto a ayer</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header finance">
+                            <span>Flujo de Caja</span>
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-finance">$12,845.75</div>
+                            <div class="stat-description">Disponible</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header hr">
+                            <span>Nómina Mensual</span>
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-hr">$23,450.00</div>
+                            <div class="stat-description">Próximo pago: 15/05</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header accounting">
+                            <span>Balance General</span>
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-accounting">$156,782.30</div>
+                            <div class="stat-description">Activos totales</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficas y tablas de resumen -->
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Ventas por Categoría</h3>
+                        <div class="chart-placeholder">Gráfica de ventas por categoría</div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">Evolución de Gastos</h3>
+                        <div class="chart-placeholder">Gráfica de evolución de gastos</div>
+                    </div>
+                </div>
+
+                <!-- Productos próximos a vencer -->
+                <div class="card">
+                    <div class="card-header primary">
+                        <span>Productos Próximos a Vencer</span>
+                        <button class="btn btn-primary">Ver Todo</button>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Lote</th>
+                                    <th>Fecha Caducidad</th>
+                                    <th>Stock</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Leche Entera 1L</td>
+                                    <td>LT-2023-085</td>
+                                    <td>15/05/2023</td>
+                                    <td>24 unidades</td>
+                                    <td><span class="badge badge-warning">7 días</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Yogur Natural</td>
+                                    <td>YG-2023-122</td>
+                                    <td>18/05/2023</td>
+                                    <td>16 unidades</td>
+                                    <td><span class="badge badge-warning">10 días</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Queso Fresco 200g</td>
+                                    <td>QS-2023-047</td>
+                                    <td>12/05/2023</td>
+                                    <td>8 unidades</td>
+                                    <td><span class="badge badge-danger">4 días</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contenido de Finanzas -->
+            <div class="tab-content" id="finanzas-tab">
+                <div class="module-header">
+                    <div>
+                        <h1 class="module-title">Módulo de Finanzas</h1>
+                        <p class="module-subtitle">Gestión de flujo de caja, presupuestos y análisis financiero</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-finance"><i class="fas fa-plus"></i> Nuevo Presupuesto</button>
+                    </div>
+                </div>
+                
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="card-header finance">
+                            <span>Ingresos del Mes</span>
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-finance">$45,682.40</div>
+                            <div class="stat-description">+8.5% vs mes anterior</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header finance">
+                            <span>Gastos del Mes</span>
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-finance">$28,945.60</div>
+                            <div class="stat-description">+3.2% vs mes anterior</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header finance">
+                            <span>Beneficio Neto</span>
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-finance">$16,736.80</div>
+                            <div class="stat-description">Margen: 36.7%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Evolución de Ingresos vs Gastos</h3>
+                        <div class="chart-placeholder">Gráfica comparativa ingresos vs gastos</div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">Distribución de Gastos</h3>
+                        <div class="chart-placeholder">Gráfica de distribución de gastos</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header finance">
+                        <span>Últimos Movimientos Financieros</span>
+                        <button class="btn btn-finance">Ver Todos</button>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Monto</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>10/05/2023</td>
+                                    <td>Pago a Proveedores</td>
+                                    <td>Compras</td>
+                                    <td>$8,450.00</td>
+                                    <td><span class="badge badge-success">Completado</span></td>
+                                </tr>
+                                <tr>
+                                    <td>09/05/2023</td>
+                                    <td>Ventas del día</td>
+                                    <td>Ingresos</td>
+                                    <td>$4,582.50</td>
+                                    <td><span class="badge badge-success">Completado</span></td>
+                                </tr>
+                                <tr>
+                                    <td>08/05/2023</td>
+                                    <td>Mantenimiento equipos</td>
+                                    <td>Gastos Operativos</td>
+                                    <td>$1,230.00</td>
+                                    <td><span class="badge badge-warning">Pendiente</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contenido de Recursos Humanos -->
+            <div class="tab-content" id="rh-tab">
+                <div class="module-header">
+                    <div>
+                        <h1 class="module-title">Recursos Humanos</h1>
+                        <p class="module-subtitle">Gestión de empleados, nóminas y asistencia</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-hr"><i class="fas fa-plus"></i> Nuevo Empleado</button>
+                    </div>
+                </div>
+                
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="card-header hr">
+                            <span>Total Empleados</span>
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-hr">42</div>
+                            <div class="stat-description">+2 este mes</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header hr">
+                            <span>Asistencia Hoy</span>
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-hr">38</div>
+                            <div class="stat-description">4 ausencias</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header hr">
+                            <span>Nómina Mensual</span>
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-hr">$23,450.00</div>
+                            <div class="stat-description">Próximo pago: 15/05</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Distribución por Departamentos</h3>
+                        <div class="chart-placeholder">Gráfica de distribución de empleados</div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">Asistencia Mensual</h3>
+                        <div class="chart-placeholder">Gráfica de tendencia de asistencia</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header hr">
+                        <span>Empleados Recientes</span>
+                        <button class="btn btn-hr">Ver Todos</button>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Puesto</th>
+                                    <th>Departamento</th>
+                                    <th>Fecha Ingreso</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>María González</td>
+                                    <td>Cajera</td>
+                                    <td>Ventas</td>
+                                    <td>01/05/2023</td>
+                                    <td><span class="badge badge-success">Activo</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Carlos López</td>
+                                    <td>Reponedor</td>
+                                    <td>Inventario</td>
+                                    <td>28/04/2023</td>
+                                    <td><span class="badge badge-success">Activo</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Ana Martínez</td>
+                                    <td>Supervisora</td>
+                                    <td>Ventas</td>
+                                    <td>15/04/2023</td>
+                                    <td><span class="badge badge-info">Capacitación</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contenido de Contabilidad -->
+            <div class="tab-content" id="contabilidad-tab">
+                <div class="module-header">
+                    <div>
+                        <h1 class="module-title">Módulo de Contabilidad</h1>
+                        <p class="module-subtitle">Gestión de balances, impuestos y libros contables</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-accounting"><i class="fas fa-file-export"></i> Exportar</button>
+                    </div>
+                </div>
+                
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="card-header accounting">
+                            <span>Activos</span>
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-accounting">$125,682.40</div>
+                            <div class="stat-description">+5.2% vs trimestre anterior</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header accounting">
+                            <span>Pasivos</span>
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-accounting">$45,945.60</div>
+                            <div class="stat-description">-2.1% vs trimestre anterior</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header accounting">
+                            <span>Patrimonio Neto</span>
+                            <i class="fas fa-hand-holding-usd"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="stat-number stat-accounting">$79,736.80</div>
+                            <div class="stat-description">+8.7% vs trimestre anterior</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Estructura del Balance</h3>
+                        <div class="chart-placeholder">Gráfica de estructura del balance</div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">Evolución Patrimonial</h3>
+                        <div class="chart-placeholder">Gráfica de evolución patrimonial</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header accounting">
+                        <span>Transacciones Contables Recientes</span>
+                        <button class="btn btn-accounting">Ver Libro Mayor</button>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Cuenta</th>
+                                    <th>Descripción</th>
+                                    <th>Debe</th>
+                                    <th>Haber</th>
+                                    <th>Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>10/05/2023</td>
+                                    <td>101.01</td>
+                                    <td>Ventas día</td>
+                                    <td>$4,582.50</td>
+                                    <td>$0.00</td>
+                                    <td>$4,582.50</td>
+                                </tr>
+                                <tr>
+                                    <td>10/05/2023</td>
+                                    <td>201.05</td>
+                                    <td>Pago proveedores</td>
+                                    <td>$0.00</td>
+                                    <td>$8,450.00</td>
+                                    <td>-$8,450.00</td>
+                                </tr>
+                                <tr>
+                                    <td>09/05/2023</td>
+                                    <td>501.02</td>
+                                    <td>Gastos operativos</td>
+                                    <td>$1,230.00</td>
+                                    <td>$0.00</td>
+                                    <td>$1,230.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Funcionalidad de pestañas
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Desactivar todas las pestañas
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    // Activar la pestaña seleccionada
+                    tab.classList.add('active');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+            
+            // Simular datos para las tarjetas
+            const updateFinancialData = () => {
+                // Simular cambios en datos financieros
+                const cashFlowElement = document.querySelector('.card-header.finance + .card-body .stat-number');
+                if (cashFlowElement) {
+                    const currentValue = parseFloat(cashFlowElement.textContent.replace('$', '').replace(',', ''));
+                    const newValue = currentValue + (Math.random() * 200 - 100);
+                    cashFlowElement.textContent = `$${newValue.toFixed(2)}`;
+                }
+            };
+            
+            // Actualizar datos cada 30 segundos (simulación)
+            setInterval(updateFinancialData, 30000);
+            
+            // Simular notificaciones
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            sidebarItems[7].innerHTML += '<span class="notification-dot"></span>'; // Finanzas
+            sidebarItems[15].innerHTML += '<span class="notification-dot"></span>'; // RH
+            sidebarItems[21].innerHTML += '<span class="notification-dot"></span>'; // Contabilidad
+        });
+    </script>
+</body>
+</html>
